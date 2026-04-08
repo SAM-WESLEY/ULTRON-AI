@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ultron-sentinel-ai
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python main.py
+    envVars:
+      - key: VIDEO_SOURCE
+        value: "0"
+      - key: CROWD_LIMIT
+        value: "20"
+      - key: TELEGRAM_ENABLED
+        value: "false"
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false

@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ULTRON — AI Sentinel System</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#080c14;--ink2:#0d1220;--ink3:#111827;
+  --red:#dc2626;--red2:#ef4444;--amber:#f59e0b;
+  --steel:#374151;--steel2:#4b5563;--steel3:#6b7280;
+  --chrome:#9ca3af;--chrome2:#d1d5db;--white:#f9fafb;
+  --accent:#dc2626;--accent2:#f59e0b;
+  --border:rgba(220,38,38,.15);--border2:rgba(156,163,175,.08);
+  --mono:'Share Tech Mono',monospace;--sans:'Inter',sans-serif;--display:'Bebas Neue',sans-serif;
+  --glow:0 0 20px rgba(220,38,38,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--chrome2);font-family:var(--sans);overflow-x:hidden;cursor:none}
+::selection{background:rgba(220,38,38,.3);color:#fff}
+
+/* ── CURSOR ── */
+#cur{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);transition:transform .1s}
+#cur-ring{width:32px;height:32px;border:1px solid rgba(220,38,38,.6);border-radius:50%;transition:all .15s}
+#cur-dot{position:fixed;z-index:9999;width:4px;height:4px;background:var(--red2);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 6px var(--red2)}
+body:hover #cur-ring{border-color:rgba(220,38,38,.9)}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;z-index:2000;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column}
+#splash.out{animation:splashOut 1s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes splashOut{to{opacity:0;transform:scale(1.05);pointer-events:none}}
+.splash-logo{position:relative;margin-bottom:40px}
+.splash-logo svg{display:block}
+.splash-bar{width:200px;height:2px;background:rgba(255,255,255,.08);border-radius:1px;overflow:hidden;margin-bottom:16px}
+.splash-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--amber));border-radius:1px;width:0%;transition:width .05s linear}
+.splash-pct{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.3)}
+
+/* ── AUTH OVERLAY ── */
+#auth-overlay{position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;animation:fadeIn .6s .1s forwards}
+@keyframes fadeIn{to{opacity:1}}
+.auth-box{width:420px;background:var(--ink2);border:1px solid var(--border);position:relative;overflow:hidden}
+.auth-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--amber),var(--red));background-size:200% 100%;animation:shimmer 2s linear infinite}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.auth-header{padding:28px 32px 0;text-align:center}
+.auth-logo-wrap{margin:0 auto 20px;display:flex;justify-content:center}
+.auth-title{font-family:var(--display);font-size:36px;letter-spacing:6px;color:var(--white);margin-bottom:4px}
+.auth-sub{font-family:var(--mono);font-size:9px;letter-spacing:5px;color:var(--red);margin-bottom:24px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border2)}
+.auth-tab{flex:1;font-family:var(--mono);font-size:9px;letter-spacing:3px;padding:12px;background:transparent;color:var(--steel3);border:none;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px}
+.auth-tab.active{color:var(--red);border-bottom-color:var(--red)}
+.auth-body{padding:28px 32px 32px}
+.auth-step{display:none}.auth-step.active{display:block}
+.af{margin-bottom:18px}
+.af label{display:block;font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--steel3);margin-bottom:7px;text-transform:uppercase}
+.af input{width:100%;padding:11px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border2);color:var(--white);font-family:var(--sans);font-size:13px;outline:none;border-radius:2px;transition:all .2s}
+.af input:focus{border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.04);box-shadow:0 0 0 3px rgba(220,38,38,.06)}
+.btn-auth{width:100%;padding:13px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:4px;background:var(--red);color:#fff;border:none;cursor:pointer;border-radius:2px;transition:all .3s;margin-top:4px}
+.btn-auth:hover{background:var(--red2);box-shadow:var(--glow);transform:translateY(-1px)}
+.auth-switch{text-align:center;margin-top:16px;font-family:var(--mono);font-size:9px;color:var(--steel3)}
+.auth-switch span{color:var(--red);cursor:pointer}
+.auth-switch span:hover{text-decoration:underline}
+.auth-fb{font-family:var(--mono);font-size:9px;padding:8px 12px;border-radius:2px;margin-top:10px;display:none}
+.auth-fb.ok{background:rgba(16,185,129,.08);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+.auth-fb.err{background:rgba(220,38,38,.08);color:var(--red2);border:1px solid rgba(220,38,38,.2)}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0;font-family:var(--mono);font-size:8px;color:var(--steel)}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* ── MAIN APP ── */
+#app{opacity:0;transition:opacity .8s}
+#app.show{opacity:1}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(8,12,20,.96);border-bottom:1px solid var(--border2);backdrop-filter:blur(8px)}
+.nav-left{display:flex;align-items:center;gap:14px}
+.nav-logo-mark{display:flex;align-items:center;gap:10px}
+.nav-wordmark{font-family:var(--display);font-size:22px;letter-spacing:5px;color:var(--white)}
+.nav-badge{font-family:var(--mono);font-size:7px;letter-spacing:2px;padding:2px 8px;background:rgba(220,38,38,.15);color:var(--red);border:1px solid rgba(220,38,38,.25);border-radius:2px}
+.nav-links{display:flex;gap:4px;margin-left:24px}
+.nav-link{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--steel3);padding:6px 14px;border-radius:2px;cursor:pointer;transition:all .2s;text-decoration:none;border:1px solid transparent}
+.nav-link:hover,.nav-link.active{color:var(--white);background:rgba(255,255,255,.04);border-color:var(--border2)}
+.nav-right{display:flex;align-items:center;gap:16px}
+.sys-ind{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--steel3)}
+.sys-dot{width:5px;height:5px;border-radius:50%;animation:pulse .9s infinite}
+.sys-dot.on{background:var(--red);box-shadow:0 0 6px var(--red)}
+.sys-dot.off{background:var(--steel)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-user{display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 10px;border-radius:2px;border:1px solid var(--border2);transition:all .2s}
+.nav-user:hover{border-color:rgba(220,38,38,.3);background:rgba(220,38,38,.04)}
+.nav-user-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--amber));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff}
+.nav-user-name{font-family:var(--mono);font-size:9px;color:var(--chrome2)}
+
+/* ── PAGES ── */
+.page{display:none;padding-top:56px;min-height:100vh}
+.page.active{display:block}
+
+/* ── HOME / HERO ── */
+#page-home{background:var(--ink)}
+.hero{position:relative;height:calc(100vh - 56px);display:flex;align-items:center;overflow:hidden}
+#hero-canvas{position:absolute;inset:0}
+.hero-content{position:relative;z-index:2;padding:0 8vw;max-width:680px}
+.hero-kicker{font-family:var(--mono);font-size:9px;letter-spacing:7px;color:var(--red);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.hero-kicker::before{content:'';display:block;width:24px;height:1px;background:var(--red)}
+.hero-h1{font-family:var(--display);font-size:clamp(56px,10vw,120px);line-height:.9;letter-spacing:2px;margin-bottom:24px}
+.hero-h1 span{display:block}
+.hero-h1 .dim{color:var(--steel2);font-size:70%}
+.hero-h1 .bright{color:var(--white)}
+.hero-h1 .accent{background:linear-gradient(90deg,var(--red),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{font-size:14px;color:var(--steel3);line-height:1.8;margin-bottom:36px;max-width:440px;font-weight:300}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-primary{font-family:var(--mono);font-size:9px;letter-spacing:3px;padding:13px 32px;background:var(--red);color:#fff;border:none;cursor:pointer;border-radius:2px;transition:all .3s}
+.btn-primary:hover{background:var(--red2);box-shadow:var(--glow);transform:translateY(-2px)}
+.btn-secondary{font-family:var(--mono);font-size:9px;letter-spacing:3px;padding:12px 32px;background:transparent;color:var(--chrome);border:1px solid var(--border2);cursor:pointer;border-radius:2px;transition:all .2s}
+.btn-secondary:hover{border-color:rgba(220,38,38,.4);color:var(--white)}
+.hero-metrics{position:absolute;right:6vw;bottom:80px;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hm-card{background:rgba(13,18,32,.85);border:1px solid var(--border2);padding:16px 20px;backdrop-filter:blur(8px);min-width:130px}
+.hm-label{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--steel3);margin-bottom:6px}
+.hm-val{font-family:var(--display);font-size:28px;letter-spacing:2px;color:var(--white)}
+.hm-unit{font-family:var(--mono);font-size:8px;color:var(--steel3);margin-top:2px}
+.hero-scroll{position:absolute;bottom:28px;left:8vw;font-family:var(--mono);font-size:8px;letter-spacing:4px;color:var(--steel);z-index:2;display:flex;align-items:center;gap:10px;animation:float 2s ease-in-out infinite}
+.hero-scroll::after{content:'';display:block;width:32px;height:1px;background:linear-gradient(90deg,var(--red),transparent)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+/* ── TICKER ── */
+.ticker-strip{background:rgba(220,38,38,.06);border-top:1px solid rgba(220,38,38,.1);border-bottom:1px solid rgba(220,38,38,.1);padding:8px 0;overflow:hidden}
+.ticker-inner{display:flex;width:max-content;animation:tick 35s linear infinite}
+.ti{font-family:var(--mono);font-size:8px;letter-spacing:4px;color:rgba(220,38,38,.5);padding:0 28px;white-space:nowrap}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── SECTION ── */
+.sec{padding:72px 32px}
+.sec-kicker{font-family:var(--mono);font-size:8px;letter-spacing:5px;color:var(--red);display:block;margin-bottom:12px}
+.sec-title{font-family:var(--display);font-size:clamp(28px,4vw,52px);letter-spacing:2px;color:var(--white);margin-bottom:8px}
+.sec-rule{width:40px;height:2px;background:var(--red);margin-bottom:32px}
+
+/* ── DASHBOARD ── */
+#page-live{background:var(--ink)}
+.dash-header{display:flex;align-items:flex-end;justify-content:space-between;max-width:1400px;margin:0 auto 20px;flex-wrap:wrap;gap:12px;padding:0 8px}
+.dash-btns{display:flex;gap:8px;flex-wrap:wrap}
+.dbtn{font-family:var(--mono);font-size:8px;letter-spacing:2px;padding:8px 18px;border:1px solid var(--border2);background:transparent;color:var(--steel3);cursor:pointer;border-radius:2px;transition:all .2s}
+.dbtn:hover,.dbtn.on{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.3);color:var(--red2)}
+.dbtn.danger:hover{background:var(--red);border-color:var(--red);color:#fff}
+.page-tabs{display:flex;gap:0;max-width:1400px;margin:0 auto 20px;padding:0 8px;border-bottom:1px solid var(--border2)}
+.ptab{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 20px;background:transparent;color:var(--steel3);border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:-1px}
+.ptab.active{color:var(--red);border-bottom-color:var(--red)}
+.tabpanel{display:none;padding:0 8px}.tabpanel.active{display:block}
+
+/* ── VIDEO PANELS ── */
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:1400px;margin:0 auto 16px}
+.vpan{background:#000;border:1px solid var(--border2);position:relative;overflow:hidden;aspect-ratio:16/10}
+.vpan img{width:100%;height:100%;object-fit:cover}
+.vp-badge{position:absolute;top:8px;left:8px;font-family:var(--mono);font-size:7px;letter-spacing:3px;padding:3px 9px;background:rgba(8,12,20,.9);color:var(--red);border:1px solid rgba(220,38,38,.2)}
+.vp-live{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:7px;color:var(--steel3)}
+.vp-rdot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:pulse .8s infinite}
+.vp-stat-bar{position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(0deg,rgba(8,12,20,.95),transparent);font-family:var(--mono);font-size:8px}
+
+/* ── CROWD BAR ── */
+.crowd-section{max-width:1400px;margin:0 auto 14px;background:var(--ink2);border:1px solid var(--border2);padding:14px 18px;position:relative}
+.crowd-section::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--red),var(--amber))}
+.crowd-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.crowd-lbl{font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--steel3)}
+.crowd-num{font-family:var(--display);font-size:22px;letter-spacing:2px;color:var(--red)}
+.bar-track{height:4px;background:rgba(255,255,255,.04);position:relative;border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .5s,background .5s;background:linear-gradient(90deg,var(--red),var(--amber))}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;max-width:1400px;margin:0 auto 14px}
+.stat{background:var(--ink2);border:1px solid var(--border2);padding:14px 12px;transition:all .2s;cursor:default}
+.stat:hover{border-color:rgba(220,38,38,.25)}
+.stat-lbl{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--steel3);margin-bottom:8px}
+.stat-val{font-family:var(--display);font-size:28px;letter-spacing:1px;line-height:1;color:var(--white)}
+.stat-sub{font-family:var(--mono);font-size:7px;color:var(--steel3);margin-top:4px}
+
+/* ── ALERT ROW ── */
+.alert-row{display:grid;grid-template-columns:2fr 1fr;gap:12px;max-width:1400px;margin:0 auto}
+.panel{background:var(--ink2);border:1px solid var(--border2)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border2)}
+.panel-title{font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--red);display:flex;align-items:center;gap:8px}
+.panel-title::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--red);animation:pulse .8s infinite}
+.alert-feed{max-height:210px;overflow-y:auto}
+.alert-feed::-webkit-scrollbar{width:2px}
+.alert-feed::-webkit-scrollbar-thumb{background:rgba(220,38,38,.3)}
+.arow{display:grid;grid-template-columns:6px 52px 1fr;gap:8px;align-items:start;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,.03);animation:aslide .25s ease}
+@keyframes aslide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.adot{width:5px;height:5px;border-radius:50%;margin-top:3px}
+.dc{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,.4)}
+.dh{background:var(--amber)}
+.dm{background:#6b7280}
+.dl{background:#374151}
+.atime{font-family:var(--mono);font-size:7px;color:var(--steel3)}
+.amsg{font-family:var(--mono);font-size:10px;color:var(--chrome2);line-height:1.4}
+.no-alert{font-family:var(--mono);font-size:9px;color:var(--steel3);padding:16px 14px;text-align:center}
+
+/* ── MINI METRICS ── */
+.mini-stack{display:flex;flex-direction:column;gap:8px}
+.mm{background:var(--ink2);border:1px solid var(--border2);padding:12px 14px}
+.mm-lbl{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--steel3);margin-bottom:5px}
+.mm-val{font-family:var(--display);font-size:20px;letter-spacing:1px;color:var(--white)}
+.mm-bar{height:2px;background:rgba(255,255,255,.04);margin-top:6px;border-radius:1px}
+.mm-fill{height:100%;border-radius:1px;transition:width .5s}
+
+/* ── ANALYTICS ── */
+.ana-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:1400px;margin:0 auto 16px}
+.ana-card{background:var(--ink2);border:1px solid var(--border2);padding:24px 18px;text-align:center;position:relative;overflow:hidden;transition:all .2s}
+.ana-card:hover{border-color:rgba(220,38,38,.25);transform:translateY(-2px)}
+.ana-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:0;transition:opacity .3s}
+.ana-card:hover::before{opacity:1}
+.ana-num{font-family:var(--display);font-size:48px;letter-spacing:2px;background:linear-gradient(135deg,var(--white),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ana-lbl{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--steel3);margin-top:6px}
+
+/* ── VIDEO UPLOAD ── */
+#page-upload{background:var(--ink)}
+.upload-container{max-width:900px;margin:0 auto;padding:0 8px}
+.upload-zone{border:2px dashed rgba(220,38,38,.2);border-radius:4px;padding:60px 40px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(220,38,38,.02);position:relative}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.05)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{margin:0 auto 20px;width:64px;height:64px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.upload-title{font-family:var(--display);font-size:28px;letter-spacing:3px;color:var(--white);margin-bottom:8px}
+.upload-sub{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--steel3);margin-bottom:6px}
+.upload-formats{font-family:var(--mono);font-size:8px;color:rgba(220,38,38,.5);letter-spacing:2px}
+.btn-upload{font-family:var(--mono);font-size:10px;letter-spacing:3px;padding:13px 36px;background:var(--red);color:#fff;border:none;cursor:pointer;border-radius:2px;transition:all .3s;margin-top:24px}
+.btn-upload:hover{background:var(--red2);box-shadow:var(--glow)}
+
+/* Job progress */
+.job-card{background:var(--ink2);border:1px solid var(--border2);padding:20px;margin-top:20px;border-radius:2px}
+.job-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.job-name{font-family:var(--mono);font-size:10px;color:var(--white)}
+.job-status{font-family:var(--mono);font-size:8px;letter-spacing:2px;padding:3px 10px;border-radius:2px}
+.js-queued{background:rgba(107,114,128,.15);color:var(--steel3);border:1px solid rgba(107,114,128,.2)}
+.js-processing{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.js-done{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+.js-error{background:rgba(220,38,38,.1);color:var(--red2);border:1px solid rgba(220,38,38,.2)}
+.prog-bar{height:3px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin-bottom:14px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--amber));border-radius:2px;transition:width .3s}
+
+/* Summary grid */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.sg-card{background:var(--ink3);border:1px solid var(--border2);padding:12px 14px;text-align:center}
+.sg-num{font-family:var(--display);font-size:26px;color:var(--white)}
+.sg-lbl{font-family:var(--mono);font-size:7px;letter-spacing:2px;color:var(--steel3);margin-top:3px}
+.risk-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:6px 16px;border-radius:2px;margin-bottom:16px}
+.risk-low{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+.risk-medium{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.risk-high{background:rgba(220,38,38,.1);color:var(--red2);border:1px solid rgba(220,38,38,.2)}
+.risk-critical{background:rgba(220,38,38,.2);color:#fff;border:1px solid var(--red);animation:pulse .8s infinite}
+
+/* Download buttons */
+.dl-row{display:flex;gap:10px;flex-wrap:wrap}
+.dl-btn{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:10px 20px;border:1px solid var(--border2);color:var(--chrome);background:transparent;cursor:pointer;border-radius:2px;transition:all .2s;text-decoration:none}
+.dl-btn:hover{border-color:rgba(220,38,38,.4);color:var(--white);background:rgba(220,38,38,.06)}
+.dl-btn svg{flex-shrink:0}
+
+/* Alert events table */
+.ev-table{width:100%;border-collapse:collapse;margin-top:14px}
+.ev-table th{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--steel3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border2)}
+.ev-table td{padding:9px 12px;font-family:var(--mono);font-size:9px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--chrome2)}
+.badge{display:inline-flex;align-items:center;font-size:7px;letter-spacing:2px;padding:2px 8px;border-radius:2px}
+.bc{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+.bh{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+
+/* ── SETTINGS ── */
+#page-settings{background:var(--ink)}
+.settings-layout{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;gap:24px;padding:0 8px}
+.settings-nav{display:flex;flex-direction:column;gap:2px;padding-top:4px}
+.snav-item{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:9px 14px;color:var(--steel3);cursor:pointer;border-radius:2px;border:1px solid transparent;transition:all .2s}
+.snav-item:hover{color:var(--white);background:rgba(255,255,255,.03)}
+.snav-item.active{color:var(--red);background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.15)}
+.spage{display:none}.spage.active{display:block}
+.scard{background:var(--ink2);border:1px solid var(--border2);padding:24px;margin-bottom:14px;position:relative;border-radius:2px}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--red),transparent)}
+.scard h3{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--red);margin-bottom:18px;text-transform:uppercase}
+.sf{margin-bottom:14px}
+.sf label{display:block;font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--steel3);margin-bottom:6px;text-transform:uppercase}
+.sf input,.sf select{width:100%;padding:9px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border2);color:var(--white);font-family:var(--sans);font-size:12px;outline:none;border-radius:2px;transition:all .2s}
+.sf input:focus,.sf select:focus{border-color:rgba(220,38,38,.4);background:rgba(220,38,38,.03)}
+.slider-wrap{display:flex;align-items:center;gap:14px}
+.slider-wrap input[type=range]{flex:1;accent-color:var(--red);cursor:pointer;height:3px}
+.slider-num{font-family:var(--display);font-size:28px;letter-spacing:1px;color:var(--red);min-width:44px;text-align:right}
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border2)}
+.tog-row span{font-family:var(--mono);font-size:9px;color:var(--chrome2)}
+.tog{position:relative;width:36px;height:18px}
+.tog input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--steel);cursor:pointer;border-radius:9px;transition:.25s}
+.tslider::before{content:'';position:absolute;height:12px;width:12px;left:3px;bottom:3px;background:var(--steel3);border-radius:50%;transition:.25s}
+.tog input:checked+.tslider{background:rgba(220,38,38,.4)}
+.tog input:checked+.tslider::before{transform:translateX(18px);background:var(--red)}
+.btn-save{font-family:var(--mono);font-size:9px;letter-spacing:3px;padding:10px 28px;background:var(--red);color:#fff;border:none;cursor:pointer;border-radius:2px;transition:all .3s;margin-top:6px}
+.btn-save:hover{background:var(--red2);box-shadow:var(--glow)}
+
+/* ── ABOUT ── */
+#page-about{background:var(--ink)}
+.about-hero{padding:80px 8vw;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1200px;margin:0 auto}
+.about-body p{font-size:14px;color:var(--steel3);line-height:1.85;margin-bottom:14px;font-weight:300}
+.tech-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.tech-tag{font-family:var(--mono);font-size:7px;letter-spacing:2px;padding:5px 12px;border:1px solid var(--border2);color:var(--steel3);border-radius:2px;transition:all .2s}
+.tech-tag:hover{border-color:rgba(220,38,38,.35);color:var(--red)}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.astat{background:var(--ink2);border:1px solid var(--border2);padding:28px 20px;text-align:center;transition:all .3s;border-radius:2px}
+.astat:hover{transform:translateY(-4px);border-color:rgba(220,38,38,.25)}
+.astat-num{font-family:var(--display);font-size:52px;letter-spacing:2px;background:linear-gradient(135deg,var(--white),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.astat-lbl{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--steel3);margin-top:6px}
+
+/* ── DEPLOY ── */
+#page-deploy{background:var(--ink)}
+.deploy-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;margin:0 auto;padding:0 8px}
+.dcard{background:var(--ink2);border:1px solid var(--border2);padding:24px;position:relative;border-radius:2px}
+.dcard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--red),transparent)}
+.dcard h3{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--red);margin-bottom:12px}
+.dcard p{font-family:var(--mono);font-size:9px;color:var(--steel3);line-height:1.8;margin-bottom:14px}
+.code-blk{background:#000;border:1px solid rgba(220,38,38,.12);padding:14px;font-family:var(--mono);font-size:9px;color:#86efac;line-height:1.9;overflow-x:auto;border-radius:2px;margin-bottom:12px}
+.code-blk .c{color:var(--steel)}
+.code-blk .k{color:var(--red2)}
+.btn-dep{font-family:var(--mono);font-size:8px;letter-spacing:2px;padding:8px 20px;background:transparent;color:var(--chrome);border:1px solid var(--border2);cursor:pointer;border-radius:2px;transition:all .2s}
+.btn-dep:hover{border-color:rgba(220,38,38,.3);color:var(--red)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9998;background:var(--ink2);border:1px solid rgba(220,38,38,.3);color:var(--red2);font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:11px 20px;border-radius:2px;animation:aslide .25s ease;pointer-events:none}
+
+/* ── ALERT TABLE ── */
+.atbl-wrap{max-width:1400px;margin:0 auto;padding:0 8px}
+.filter-row{display:flex;gap:6px;margin-bottom:16px}
+.fbtn{font-family:var(--mono);font-size:8px;letter-spacing:2px;padding:6px 14px;border:1px solid var(--border2);background:transparent;color:var(--steel3);cursor:pointer;border-radius:2px;transition:all .2s}
+.fbtn.active{border-color:rgba(220,38,38,.35);color:var(--red);background:rgba(220,38,38,.06)}
+.atbl{width:100%;border-collapse:collapse}
+.atbl th{font-family:var(--mono);font-size:7px;letter-spacing:3px;color:var(--steel3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border2)}
+.atbl td{padding:10px 12px;font-family:var(--mono);font-size:9px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--chrome2)}
+
+/* ── ZONE ── */
+.zone-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px}
+.zone-card{background:var(--ink3);border:1px solid;padding:14px;border-radius:2px}
+
+@media(max-width:900px){
+  .vgrid,.stats-grid,.ana-cards,.deploy-grid{grid-template-columns:1fr}
+  .alert-row{grid-template-columns:1fr}
+  .about-hero,.settings-layout{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .hero-metrics{display:none}
+  nav{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── CURSOR ── -->
+<div id="cur"><div id="cur-ring"></div></div>
+<div id="cur-dot"></div>
+
+<!-- ══════════════════════════════════════════════
+     SPLASH SCREEN
+══════════════════════════════════════════════ -->
+<div id="splash">
+  <div class="splash-logo">
+    <!-- Industrial grade ULTRON logo - geometric eye / sentinel mark -->
+    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sg1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#dc2626"/>
+        </linearGradient>
+        <linearGradient id="sg2" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#dc2626"/>
+          <stop offset="100%" stop-color="#9ca3af"/>
+        </linearGradient>
+      </defs>
+      <!-- Outer hex ring -->
+      <polygon points="60,4 106,28 106,92 60,116 14,92 14,28" fill="none" stroke="url(#sg1)" stroke-width="1.5" opacity=".6" id="sp-hex1"/>
+      <!-- Mid ring -->
+      <polygon points="60,16 96,36 96,84 60,104 24,84 24,36" fill="none" stroke="rgba(220,38,38,.3)" stroke-width="1" id="sp-hex2"/>
+      <!-- Central mark: stylized S / shield -->
+      <path d="M60 32 L78 42 L78 60 L60 70 L42 60 L42 42 Z" fill="none" stroke="url(#sg2)" stroke-width="1.5"/>
+      <!-- Eye core -->
+      <path d="M40 60 Q60 44 80 60 Q60 76 40 60 Z" fill="url(#sg1)" opacity=".9"/>
+      <circle cx="60" cy="60" r="8" fill="#0d1220"/>
+      <circle cx="60" cy="60" r="5" fill="url(#sg1)"/>
+      <circle cx="60" cy="60" r="2" fill="#fff"/>
+      <!-- Corner tick marks -->
+      <line x1="14" y1="28" x2="22" y2="34" stroke="rgba(220,38,38,.6)" stroke-width="1.5"/>
+      <line x1="106" y1="28" x2="98" y2="34" stroke="rgba(220,38,38,.6)" stroke-width="1.5"/>
+      <line x1="14" y1="92" x2="22" y2="86" stroke="rgba(220,38,38,.6)" stroke-width="1.5"/>
+      <line x1="106" y1="92" x2="98" y2="86" stroke="rgba(220,38,38,.6)" stroke-width="1.5"/>
+      <!-- Scan line animated -->
+      <line x1="18" y1="60" x2="102" y2="60" stroke="rgba(220,38,38,.15)" stroke-width="1" id="sp-scan"/>
+    </svg>
+  </div>
+  <div class="splash-bar"><div class="splash-fill" id="sp-fill"></div></div>
+  <div class="splash-pct" id="sp-pct">INITIALIZING...</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     AUTH OVERLAY
+══════════════════════════════════════════════ -->
+<div id="auth-overlay" style="display:none">
+  <div class="auth-box">
+    <div class="auth-header">
+      <div class="auth-logo-wrap">
+        <svg width="48" height="48" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ag1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>
+          </defs>
+          <polygon points="60,4 106,28 106,92 60,116 14,92 14,28" fill="none" stroke="url(#ag1)" stroke-width="1.5" opacity=".6"/>
+          <path d="M40 60 Q60 44 80 60 Q60 76 40 60 Z" fill="url(#ag1)" opacity=".9"/>
+          <circle cx="60" cy="60" r="8" fill="#0d1220"/>
+          <circle cx="60" cy="60" r="5" fill="url(#ag1)"/>
+          <circle cx="60" cy="60" r="2" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="auth-title">ULTRON</div>
+      <div class="auth-sub">AI SENTINEL SYSTEM</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="swAuthTab('login',this)">LOGIN</button>
+        <button class="auth-tab" onclick="swAuthTab('register',this)">REGISTER</button>
+      </div>
+    </div>
+    <div class="auth-body">
+      <!-- LOGIN -->
+      <div class="auth-step active" id="at-login">
+        <div class="af"><label>Email / Operator ID</label><input type="text" id="l-user" placeholder="operator@ultron.sys" autocomplete="username"></div>
+        <div class="af"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"></div>
+        <button class="btn-auth" onclick="doLogin()">ACCESS SYSTEM</button>
+        <div id="l-fb" class="auth-fb"></div>
+        <div class="divider">OR</div>
+        <div class="auth-switch">Don't have an account? <span onclick="swAuthTab('register',document.querySelectorAll('.auth-tab')[1])">Register here</span></div>
+      </div>
+      <!-- REGISTER -->
+      <div class="auth-step" id="at-register">
+        <div class="af"><label>Full Name</label><input type="text" id="r-name" placeholder="John Sentinel"></div>
+        <div class="af"><label>Email</label><input type="email" id="r-email" placeholder="op@ultron.sys"></div>
+        <div class="af"><label>Password</label><input type="password" id="r-pass" placeholder="Min 8 characters"></div>
+        <div class="af"><label>Confirm Password</label><input type="password" id="r-pass2" placeholder="Repeat password"></div>
+        <button class="btn-auth" onclick="doRegister()">CREATE ACCOUNT</button>
+        <div id="r-fb" class="auth-fb"></div>
+        <div class="auth-switch">Already have an account? <span onclick="swAuthTab('login',document.querySelectorAll('.auth-tab')[0])">Login</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════ -->
+<div id="app">
+  <!-- NAV -->
+  <nav>
+    <div class="nav-left">
+      <div class="nav-logo-mark">
+        <svg width="28" height="28" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="ng1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs>
+          <polygon points="60,4 106,28 106,92 60,116 14,92 14,28" fill="none" stroke="url(#ng1)" stroke-width="2" opacity=".7"/>
+          <path d="M40 60 Q60 44 80 60 Q60 76 40 60 Z" fill="url(#ng1)" opacity=".9"/>
+          <circle cx="60" cy="60" r="8" fill="#080c14"/>
+          <circle cx="60" cy="60" r="5" fill="url(#ng1)"/>
+          <circle cx="60" cy="60" r="2" fill="#fff"/>
+        </svg>
+        <span class="nav-wordmark">ULTRON</span>
+        <span class="nav-badge">v3.0</span>
+      </div>
+      <div class="nav-links">
+        <span class="nav-link active" onclick="showPage('home',this)">HOME</span>
+        <span class="nav-link" onclick="showPage('live',this)">LIVE FEED</span>
+        <span class="nav-link" onclick="showPage('upload',this)">VIDEO ANALYSIS</span>
+        <span class="nav-link" onclick="showPage('settings',this)">SETTINGS</span>
+        <span class="nav-link" onclick="showPage('about',this)">ABOUT</span>
+        <span class="nav-link" onclick="showPage('deploy',this)">DEPLOY</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="sys-ind"><div class="sys-dot off" id="sdot"></div><span id="sstat" style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--steel3)">OFFLINE</span></div>
+      <div class="nav-user" onclick="logout()">
+        <div class="nav-user-avatar" id="user-avatar">OP</div>
+        <span class="nav-user-name" id="user-name">OPERATOR</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HOME ── -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <canvas id="hero-canvas"></canvas>
+      <div class="hero-content">
+        <div class="hero-kicker">SENTINEL AI SYSTEM v3</div>
+        <h1 class="hero-h1">
+          <span class="dim">CROWD</span>
+          <span class="bright">INTELLIGENCE</span>
+          <span class="accent">PLATFORM</span>
+        </h1>
+        <p class="hero-desc">Real-time detection, anomaly analysis, aggression identification and video forensics. Upload crowd footage for instant AI analysis with downloadable reports.</p>
+        <div class="hero-btns">
+          <button class="btn-primary" onclick="showPage('live',document.querySelector('.nav-link:nth-child(2)'))">LIVE SURVEILLANCE</button>
+          <button class="btn-secondary" onclick="showPage('upload',document.querySelector('.nav-link:nth-child(3)'))">ANALYSE VIDEO</button>
+        </div>
+      </div>
+      <div class="hero-metrics">
+        <div class="hm-card"><div class="hm-label">DETECTION</div><div class="hm-val">YOLO</div><div class="hm-unit">11S MODEL</div></div>
+        <div class="hm-card"><div class="hm-label">ACCURACY</div><div class="hm-val">99%</div><div class="hm-unit">PRECISION</div></div>
+        <div class="hm-card"><div class="hm-label">LATENCY</div><div class="hm-val">~33</div><div class="hm-unit">MS / FRAME</div></div>
+        <div class="hm-card"><div class="hm-label">ALGORITHMS</div><div class="hm-val">5</div><div class="hm-unit">COMBINED</div></div>
+      </div>
+      <div class="hero-scroll">SCROLL DOWN</div>
+    </div>
+    <div class="ticker-strip">
+      <div class="ticker-inner">
+        <span class="ti">YOLO11S</span><span class="ti">BOT-SORT TRACKING</span><span class="ti">ISOLATION FOREST</span>
+        <span class="ti">AGGRESSION DETECTION</span><span class="ti">HEATMAP ANALYSIS</span><span class="ti">OPTICAL FLOW</span>
+        <span class="ti">TELEGRAM ALERTS</span><span class="ti">EMAIL ALERTS</span><span class="ti">SMS TWILIO</span>
+        <span class="ti">VIDEO FORENSICS</span><span class="ti">DOWNLOADABLE REPORTS</span><span class="ti">FASTAPI WEBSOCKET</span>
+        <span class="ti">YOLO11S</span><span class="ti">BOT-SORT TRACKING</span><span class="ti">ISOLATION FOREST</span>
+        <span class="ti">AGGRESSION DETECTION</span><span class="ti">HEATMAP ANALYSIS</span><span class="ti">OPTICAL FLOW</span>
+        <span class="ti">TELEGRAM ALERTS</span><span class="ti">EMAIL ALERTS</span><span class="ti">SMS TWILIO</span>
+        <span class="ti">VIDEO FORENSICS</span><span class="ti">DOWNLOADABLE REPORTS</span><span class="ti">FASTAPI WEBSOCKET</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIVE ── -->
+  <div class="page" id="page-live">
+    <div class="sec" style="padding-bottom:0">
+      <div class="dash-header">
+        <div><span class="sec-kicker">LIVE SURVEILLANCE</span><div class="sec-title" style="margin-bottom:0">COMMAND CENTER</div></div>
+        <div class="dash-btns">
+          <button class="dbtn on" onclick="startSys()">▶ ACTIVATE</button>
+          <button class="dbtn" onclick="stopSys()">■ HALT</button>
+          <button class="dbtn" onclick="clearAlerts()">CLR ALERTS</button>
+          <button class="dbtn danger" id="btn-rec" onclick="toggleRec()">● REC</button>
+        </div>
+      </div>
+      <div class="page-tabs">
+        <button class="ptab active" onclick="showTab('feed',this)">LIVE FEED</button>
+        <button class="ptab" onclick="showTab('analytics',this)">ANALYTICS</button>
+        <button class="ptab" onclick="showTab('alert-log',this)">ALERT LOG</button>
+      </div>
+
+      <div class="tabpanel active" id="tab-feed">
+        <div class="vgrid">
+          <div class="vpan"><img id="img-raw" src="" alt=""><div class="vp-badge">DETECTION</div><div class="vp-live"><div class="vp-rdot"></div></div><div class="vp-stat-bar"><span id="vp-st" style="font-family:var(--mono);font-size:8px;color:var(--steel3)">AWAITING SIGNAL...</span></div></div>
+          <div class="vpan"><img id="img-hm" src="" alt=""><div class="vp-badge">THERMAL MAP</div></div>
+          <div class="vpan"><img id="img-flow" src="" alt=""><div class="vp-badge">OPTICAL FLOW</div></div>
+        </div>
+        <div class="crowd-section">
+          <div class="crowd-head"><span class="crowd-lbl">CROWD DENSITY METER</span><span class="crowd-num" id="crowd-ratio">0 / 20</span></div>
+          <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-lbl">PEOPLE</div><div class="stat-val" id="s-cnt" style="color:var(--red)">0</div><div class="stat-sub" id="s-lim">LIMIT: 20</div></div>
+          <div class="stat"><div class="stat-lbl">AVG SPEED</div><div class="stat-val" id="s-spd">0</div><div class="stat-sub">PX/SEC</div></div>
+          <div class="stat"><div class="stat-lbl">STATUS</div><div class="stat-val" id="s-stat" style="font-size:14px;letter-spacing:1px;color:#10b981">NORMAL</div><div class="stat-sub" id="s-frms"></div></div>
+          <div class="stat"><div class="stat-lbl">AGGRESSION</div><div class="stat-val" id="s-aggr" style="font-size:14px;letter-spacing:1px;color:#10b981">NONE</div><div class="stat-sub" id="s-aids"></div></div>
+          <div class="stat"><div class="stat-lbl">GATHERINGS</div><div class="stat-val" id="s-grps" style="color:var(--amber)">0</div><div class="stat-sub">ACTIVE</div></div>
+          <div class="stat"><div class="stat-lbl">ALERTS</div><div class="stat-val" id="s-alrt" style="color:var(--red)">0</div><div class="stat-sub">TOTAL</div></div>
+        </div>
+        <div class="alert-row">
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">ALERT FEED</span><span id="alert-ct" style="font-family:var(--mono);font-size:7px;color:var(--steel3)">0 EVENTS</span></div>
+            <div class="alert-feed" id="alert-feed"><div class="no-alert">NO ALERTS — SYSTEM NOMINAL</div></div>
+          </div>
+          <div class="mini-stack">
+            <div class="mm"><div class="mm-lbl">MAX DENSITY</div><div class="mm-val" id="mm-den" style="color:var(--red)">0.00</div><div class="mm-bar"><div class="mm-fill" id="mmb-den" style="width:0%;background:linear-gradient(90deg,var(--red),var(--amber))"></div></div></div>
+            <div class="mm"><div class="mm-lbl">FLOW COHERENCE</div><div class="mm-val" id="mm-coh" style="color:var(--amber)">0.000</div><div class="mm-bar"><div class="mm-fill" id="mmb-coh" style="width:0%;background:linear-gradient(90deg,var(--amber),#fcd34d)"></div></div></div>
+            <div class="mm"><div class="mm-lbl">AI WARMUP</div><div class="mm-val" id="mm-warm" style="color:#10b981">0%</div><div class="mm-bar"><div class="mm-fill" id="mmb-warm" style="width:0%;background:linear-gradient(90deg,#10b981,#059669)"></div></div></div>
+            <div class="mm"><div class="mm-lbl">ENERGY RATIO</div><div class="mm-val" id="mm-energy" style="color:#f59e0b">0.000</div><div class="mm-bar"><div class="mm-fill" id="mmb-energy" style="width:0%;background:linear-gradient(90deg,#f59e0b,#d97706)"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabpanel" id="tab-analytics">
+        <div class="ana-cards">
+          <div class="ana-card"><div class="ana-num" id="a-den">0.00</div><div class="ana-lbl">MAX DENSITY</div></div>
+          <div class="ana-card"><div class="ana-num" id="a-coh">0.000</div><div class="ana-lbl">FLOW COHERENCE</div></div>
+          <div class="ana-card"><div class="ana-num" id="a-spd">0</div><div class="ana-lbl">MAX SPEED PX/S</div></div>
+          <div class="ana-card"><div class="ana-num" id="a-soc">0</div><div class="ana-lbl">SOCIAL VIOLATIONS</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;max-width:1400px;margin:0 auto;padding:0 8px">
+          <div class="panel"><div class="panel-head"><span class="panel-title">ZONE STATUS</span></div><div class="zone-grid" id="zone-grid"></div></div>
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">ANOMALY ENGINE</span></div>
+            <div style="padding:18px">
+              <div class="mm-lbl">ANOMALY SCORE</div><div style="font-family:var(--display);font-size:36px;letter-spacing:1px;color:var(--red);margin-bottom:12px" id="a-score">—</div>
+              <div class="mm-lbl">CONSECUTIVE FRAMES</div><div style="font-family:var(--display);font-size:28px;letter-spacing:1px;color:var(--amber);margin-bottom:12px" id="a-frms">0</div>
+              <div class="mm-lbl">WARMUP</div><div class="mm-bar" style="margin-top:6px"><div class="mm-fill" id="a-warm-bar" style="width:0%;background:linear-gradient(90deg,#10b981,#059669)"></div></div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--steel3);margin-top:5px" id="a-warm-pct">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabpanel" id="tab-alert-log">
+        <div class="atbl-wrap">
+          <div class="filter-row">
+            <button class="fbtn active" onclick="filterAl('all',this)">ALL</button>
+            <button class="fbtn" onclick="filterAl('critical',this)">CRITICAL</button>
+            <button class="fbtn" onclick="filterAl('high',this)">HIGH</button>
+            <button class="fbtn" onclick="filterAl('medium',this)">MEDIUM</button>
+          </div>
+          <table class="atbl"><thead><tr><th>TIME</th><th>LEVEL</th><th>MESSAGE</th><th>TYPE</th></tr></thead>
+          <tbody id="atbl-body"><tr><td colspan="4" style="font-family:var(--mono);font-size:9px;color:var(--steel3);padding:16px 12px">NO ALERTS RECORDED</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VIDEO UPLOAD ── -->
+  <div class="page" id="page-upload">
+    <div class="sec">
+      <span class="sec-kicker">VIDEO FORENSICS</span>
+      <div class="sec-title">CROWD VIDEO ANALYSIS</div>
+      <div class="sec-rule"></div>
+      <div class="upload-container">
+        <div class="upload-zone" id="upload-zone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+          <input type="file" id="video-file" accept="video/*" onchange="onFileSelect(event)">
+          <div class="upload-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+          </div>
+          <div class="upload-title">DROP VIDEO HERE</div>
+          <div class="upload-sub">OR CLICK TO BROWSE FILES</div>
+          <div class="upload-formats">MP4 · AVI · MOV · MKV · WEBM — MAX 500MB</div>
+          <button class="btn-upload">SELECT VIDEO FILE</button>
+        </div>
+
+        <div id="jobs-container"></div>
+
+        <div style="margin-top:32px;padding:20px;background:var(--ink2);border:1px solid var(--border2);border-radius:2px">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--red);margin-bottom:12px">ANALYSIS INCLUDES</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--steel3);line-height:1.8">
+              <div style="color:var(--chrome2);margin-bottom:4px">DETECTION</div>
+              People count per frame<br>Aggression events<br>Anomaly timestamps<br>Gathering detection
+            </div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--steel3);line-height:1.8">
+              <div style="color:var(--chrome2);margin-bottom:4px">OUTPUTS</div>
+              Annotated video (MP4)<br>Full JSON report<br>CSV frame data<br>Risk assessment
+            </div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--steel3);line-height:1.8">
+              <div style="color:var(--chrome2);margin-bottom:4px">METRICS</div>
+              Flow coherence<br>Density heatmap<br>Speed analysis<br>Social distance
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="page-settings">
+    <div class="sec">
+      <span class="sec-kicker">CONFIGURATION</span>
+      <div class="sec-title">SYSTEM SETTINGS</div>
+      <div class="sec-rule"></div>
+      <div class="settings-layout">
+        <div class="settings-nav">
+          <div class="snav-item active" onclick="showSPage('crowd',this)">CROWD LIMIT</div>
+          <div class="snav-item" onclick="showSPage('telegram',this)">TELEGRAM</div>
+          <div class="snav-item" onclick="showSPage('email',this)">EMAIL</div>
+          <div class="snav-item" onclick="showSPage('sms',this)">SMS</div>
+          <div class="snav-item" onclick="showSPage('detection',this)">DETECTION</div>
+        </div>
+        <div>
+          <div class="spage active" id="sp-crowd">
+            <div class="scard"><h3>CROWD THRESHOLD</h3>
+              <div class="sf"><label>Max people before alert (1–100)</label>
+                <div class="slider-wrap"><input type="range" id="sl" min="1" max="100" value="20" step="1" oninput="document.getElementById('slv').textContent=this.value"><div class="slider-num" id="slv">20</div></div>
+              </div>
+              <p style="font-family:var(--mono);font-size:8px;color:var(--steel3);line-height:1.8;margin-bottom:14px">Alert fires when live count exceeds this number. Bar turns red on video overlay.</p>
+              <button class="btn-save" onclick="saveCrowd()">SAVE THRESHOLD</button>
+            </div>
+          </div>
+          <div class="spage" id="sp-telegram">
+            <div class="scard"><h3>TELEGRAM ALERTS</h3>
+              <div class="tog-row"><span>Enable Telegram notifications</span><label class="tog"><input type="checkbox" id="tg-en"><span class="tslider"></span></label></div>
+              <div class="sf"><label>Bot Token</label><input type="text" id="tg-tok" placeholder="123456:ABC-DEF..."></div>
+              <div class="sf"><label>Chat ID</label><input type="text" id="tg-chat" placeholder="-100123456789"></div>
+              <p style="font-family:var(--mono);font-size:8px;color:var(--steel3);margin-bottom:14px;line-height:1.8">1. Create bot via @BotFather 2. Send /newbot 3. Copy token. For Chat ID visit t.me/userinfobot</p>
+              <button class="btn-save" onclick="saveTg()">SAVE TELEGRAM</button>
+            </div>
+          </div>
+          <div class="spage" id="sp-email">
+            <div class="scard"><h3>EMAIL ALERTS</h3>
+              <div class="tog-row"><span>Enable email notifications</span><label class="tog"><input type="checkbox" id="em-en"><span class="tslider"></span></label></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="sf"><label>SMTP Host</label><input type="text" id="em-host" placeholder="smtp.gmail.com"></div>
+                <div class="sf"><label>SMTP Port</label><input type="text" id="em-port" placeholder="587"></div>
+                <div class="sf"><label>From Email</label><input type="text" id="em-from" placeholder="alerts@ultron.sys"></div>
+                <div class="sf"><label>To Email</label><input type="text" id="em-to" placeholder="admin@you.com"></div>
+              </div>
+              <div class="sf"><label>App Password</label><input type="password" id="em-pass" placeholder="Gmail app password (not account password)"></div>
+              <button class="btn-save" onclick="saveEmail()">SAVE EMAIL</button>
+            </div>
+          </div>
+          <div class="spage" id="sp-sms">
+            <div class="scard"><h3>SMS ALERTS (TWILIO)</h3>
+              <div class="tog-row"><span>Enable SMS notifications</span><label class="tog"><input type="checkbox" id="sms-en"><span class="tslider"></span></label></div>
+              <div class="sf"><label>Account SID</label><input type="text" id="sms-sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
+              <div class="sf"><label>Auth Token</label><input type="password" id="sms-tok" placeholder="Auth token from Twilio console"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="sf"><label>From Number</label><input type="text" id="sms-from" placeholder="+1XXXXXXXXXX"></div>
+                <div class="sf"><label>To Number</label><input type="text" id="sms-to" placeholder="+91XXXXXXXXXX"></div>
+              </div>
+              <button class="btn-save" onclick="saveSMS()">SAVE SMS</button>
+            </div>
+          </div>
+          <div class="spage" id="sp-detection">
+            <div class="scard"><h3>DETECTION PARAMETERS</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+                <div class="sf"><label>Aggression Speed (px/s)</label><input type="number" id="cfg-spd" value="120"></div>
+                <div class="sf"><label>Anomaly Confirm Frames</label><input type="number" id="cfg-frm" value="8"></div>
+                <div class="sf"><label>Skip Frames</label><input type="number" id="cfg-skip" value="1"></div>
+              </div>
+              <button class="btn-save" onclick="saveDet()">APPLY PARAMETERS</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ABOUT ── -->
+  <div class="page" id="page-about">
+    <div class="sec">
+      <div class="about-hero" style="padding:0">
+        <div class="about-body">
+          <span class="sec-kicker">ABOUT ULTRON</span>
+          <div class="sec-title">INTELLIGENCE. PRECISION. PROTECTION.</div>
+          <div class="sec-rule"></div>
+          <p>ULTRON combines five cutting-edge computer vision algorithms into a unified real-time surveillance platform. Built on YOLO11s detection, BoT-SORT multi-object tracking, Isolation Forest anomaly detection, and custom fluid dynamics for crowd flow analysis.</p>
+          <p>Designed for security operations, event management, and public safety — delivering actionable intelligence before incidents escalate. Upload historical footage or monitor live feeds in real time.</p>
+          <p style="font-size:12px;color:rgba(107,114,128,.6)">Developer: Sam Wesley S · Karunya Institute of Technology and Sciences</p>
+          <div class="tech-list">
+            <span class="tech-tag">YOLO11S</span><span class="tech-tag">BOT-SORT</span><span class="tech-tag">ISOLATION FOREST</span>
+            <span class="tech-tag">OPTICAL FLOW</span><span class="tech-tag">VORONOI</span><span class="tech-tag">FASTAPI</span>
+            <span class="tech-tag">WEBSOCKET</span><span class="tech-tag">OPENCV</span><span class="tech-tag">SCIKIT-LEARN</span><span class="tech-tag">TWILIO</span>
+          </div>
+        </div>
+        <div class="about-stats">
+          <div class="astat"><div class="astat-num">5</div><div class="astat-lbl">ALGORITHMS COMBINED</div></div>
+          <div class="astat"><div class="astat-num">~30</div><div class="astat-lbl">FPS REALTIME</div></div>
+          <div class="astat"><div class="astat-num">3</div><div class="astat-lbl">ALERT CHANNELS</div></div>
+          <div class="astat"><div class="astat-num">99%</div><div class="astat-lbl">DETECTION PRECISION</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DEPLOY ── -->
+  <div class="page" id="page-deploy">
+    <div class="sec">
+      <span class="sec-kicker">DEPLOYMENT</span>
+      <div class="sec-title">GO LIVE</div>
+      <div class="sec-rule"></div>
+      <div class="deploy-grid">
+        <div class="dcard"><h3>LOCAL SETUP</h3><p>Run ULTRON locally. Requires Python 3.10+ and a webcam or RTSP stream.</p>
+          <div class="code-blk"><span class="c"># Install dependencies</span><br><span class="k">cd backend && pip install -r requirements.txt</span><br><br><span class="c"># Download YOLO model</span><br><span class="k">python -c "from ultralytics import YOLO; YOLO('yolo11s.pt')"</span><br><br><span class="c"># Launch ULTRON</span><br><span class="k">python main.py</span><br><span class="c"># Open: http://localhost:8000</span></div>
+          <button class="btn-dep">VIEW ON GITHUB</button>
+        </div>
+        <div class="dcard"><h3>RENDER.COM (FREE)</h3><p>Deploy free to Render. Auto-deploys from GitHub via render.yaml config.</p>
+          <div class="code-blk"><span class="c"># Push to GitHub</span><br><span class="k">git init && git add . && git commit -m "init"</span><br><span class="k">git push origin main</span><br><br><span class="c"># On Render.com</span><br><span class="k">New → Web Service → Connect repo</span><br><span class="k">→ Auto-deploys via render.yaml</span></div>
+          <button class="btn-dep" onclick="window.open('https://render.com','_blank')">OPEN RENDER.COM</button>
+        </div>
+        <div class="dcard"><h3>RAILWAY (FREE TIER)</h3><p>One-click deploy with $5/month free credits — no card required.</p>
+          <div class="code-blk"><span class="k">npm install -g @railway/cli</span><br><span class="k">railway login</span><br><span class="k">railway init</span><br><span class="k">railway up</span></div>
+          <button class="btn-dep" onclick="window.open('https://railway.app','_blank')">OPEN RAILWAY</button>
+        </div>
+        <div class="dcard"><h3>RASPBERRY PI (EDGE)</h3><p>On-premise edge detection. Low latency, no cloud dependency required.</p>
+          <div class="code-blk"><span class="c"># config.py changes for Pi</span><br><span class="k">YOLO_MODEL = "yolo11n.pt"</span><br><span class="k">SKIP_FRAMES = 3</span><br><br><span class="k">pip install -r requirements.txt</span><br><span class="k">python main.py</span><br><span class="c"># Access: http://PI_IP:8000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── CURSOR ─────────────────────────────────────────────────────
+const curEl=document.getElementById('cur'),cdotEl=document.getElementById('cur-dot');
+let mx=0,my=0,cx=0,cy=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cdotEl.style.left=mx+'px';cdotEl.style.top=my+'px'});
+(function animC(){cx+=(mx-cx)*.14;cy+=(my-cy)*.14;curEl.style.left=cx+'px';curEl.style.top=cy+'px';requestAnimationFrame(animC)})();
+
+// ── SPLASH ─────────────────────────────────────────────────────
+let currentUser = null;
+(function splash(){
+  const fill=document.getElementById('sp-fill'),pct=document.getElementById('sp-pct');
+  const msgs=["INITIALIZING...","LOADING MODULES...","CALIBRATING AI...","READY"];
+  let p=0;
+  const iv=setInterval(()=>{
+    p+=Math.random()*6+2;
+    if(p>100)p=100;
+    fill.style.width=p+'%';
+    pct.textContent=msgs[Math.floor(p/34)%msgs.length]+(p<100?' ':'');
+    if(p>=100){
+      clearInterval(iv);pct.textContent="SYSTEM READY";
+      setTimeout(()=>{
+        document.getElementById('splash').classList.add('out');
+        setTimeout(()=>{
+          document.getElementById('splash').style.display='none';
+          showAuthOverlay();
+        },1000);
+      },600);
+    }
+  },80);
+})();
+
+// ── AUTH ───────────────────────────────────────────────────────
+function showAuthOverlay(){
+  const ao=document.getElementById('auth-overlay');
+  ao.style.display='flex';
+}
+function swAuthTab(tab,el){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.auth-step').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('at-'+tab).classList.add('active');
+}
+function doLogin(){
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  if(!u||!p){showAuthFb('l-fb','err','ENTER CREDENTIALS');return}
+  if(p.length<4){showAuthFb('l-fb','err','INVALID PASSWORD');return}
+  currentUser={name:u.split('@')[0].toUpperCase(),email:u};
+  enterApp();
+}
+function doRegister(){
+  const n=document.getElementById('r-name').value.trim();
+  const e=document.getElementById('r-email').value.trim();
+  const p=document.getElementById('r-pass').value;
+  const p2=document.getElementById('r-pass2').value;
+  if(!n||!e||!p){showAuthFb('r-fb','err','ALL FIELDS REQUIRED');return}
+  if(p.length<8){showAuthFb('r-fb','err','PASSWORD MIN 8 CHARS');return}
+  if(p!==p2){showAuthFb('r-fb','err','PASSWORDS DO NOT MATCH');return}
+  currentUser={name:n.toUpperCase(),email:e};
+  showAuthFb('r-fb','ok','ACCOUNT CREATED — LOGGING IN...');
+  setTimeout(enterApp,1000);
+}
+function showAuthFb(id,type,msg){const el=document.getElementById(id);el.style.display='block';el.className='auth-fb '+type;el.textContent=msg}
+function enterApp(){
+  document.getElementById('auth-overlay').style.display='none';
+  const app=document.getElementById('app');
+  app.classList.add('show');
+  if(currentUser){
+    document.getElementById('user-name').textContent=currentUser.name;
+    document.getElementById('user-avatar').textContent=currentUser.name.slice(0,2);
+  }
+  initHero();
+  fetch('/settings').then(r=>r.json()).then(s=>{
+    if(s.crowd_limit){document.getElementById('sl').value=s.crowd_limit;document.getElementById('slv').textContent=s.crowd_limit}
+    if(s.telegram_token)document.getElementById('tg-tok').value=s.telegram_token;
+    if(s.telegram_chat_id)document.getElementById('tg-chat').value=s.telegram_chat_id;
+  }).catch(()=>{});
+}
+function logout(){
+  currentUser=null;
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('app').style.display='none';
+  setTimeout(()=>{document.getElementById('app').style.display='';document.getElementById('app').style.opacity='0'},100);
+  showAuthOverlay();
+}
+
+// ── NAV / PAGE ─────────────────────────────────────────────────
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el)el.classList.add('active');
+}
+function showTab(name,el){
+  document.querySelectorAll('.tabpanel').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+function showSPage(name,el){
+  document.querySelectorAll('.spage').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.snav-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('sp-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── HERO THREE.JS ──────────────────────────────────────────────
+function initHero(){
+  const c=document.getElementById('hero-canvas');
+  if(!c)return;
+  const W=c.parentElement.offsetWidth,H=c.parentElement.offsetHeight;
+  c.style.cssText=`position:absolute;inset:0;width:100%;height:100%`;
+  const renderer=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(W,H);renderer.setClearColor(0x000000,0);
+  const scene=new THREE.Scene();
+  scene.fog=new THREE.FogExp2(0x080c14,.022);
+  const camera=new THREE.PerspectiveCamera(55,W/H,.1,200);
+  camera.position.set(0,2,16);
+
+  const grid=new THREE.GridHelper(80,50,0xdc2626,0x1a0808);
+  grid.position.y=-5;grid.material.opacity=.2;grid.material.transparent=true;scene.add(grid);
+
+  const pg=new THREE.BufferGeometry();
+  const pp=new Float32Array(1800*3);
+  for(let i=0;i<1800;i++){pp[i*3]=(Math.random()-.5)*70;pp[i*3+1]=(Math.random()-.5)*28;pp[i*3+2]=(Math.random()-.5)*70}
+  pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+  scene.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0x4b5563,size:.05,transparent:true,opacity:.6})));
+
+  // Central hexagonal prism wireframe (matches logo)
+  const hexGeo=new THREE.CylinderGeometry(3,3,5,6,1,true);
+  const hex=new THREE.Mesh(hexGeo,new THREE.MeshBasicMaterial({color:0xdc2626,wireframe:true,transparent:true,opacity:.12}));
+  scene.add(hex);
+  const hexInner=new THREE.Mesh(new THREE.CylinderGeometry(2,2,4,6,1,true),new THREE.MeshBasicMaterial({color:0xf59e0b,wireframe:true,transparent:true,opacity:.08}));
+  scene.add(hexInner);
+
+  // Orbit rings
+  const r1=new THREE.Mesh(new THREE.TorusGeometry(4.5,.015,8,80),new THREE.MeshBasicMaterial({color:0xdc2626,transparent:true,opacity:.3}));
+  r1.rotation.x=Math.PI/2;scene.add(r1);
+  const r2=new THREE.Mesh(new THREE.TorusGeometry(6,.01,8,80),new THREE.MeshBasicMaterial({color:0xf59e0b,transparent:true,opacity:.15}));
+  r2.rotation.x=Math.PI/3;scene.add(r2);
+  const r3=new THREE.Mesh(new THREE.TorusGeometry(7.5,.008,8,80),new THREE.MeshBasicMaterial({color:0x374151,transparent:true,opacity:.2}));
+  r3.rotation.x=Math.PI/5;r3.rotation.y=Math.PI/4;scene.add(r3);
+
+  // Orbiting octahedra
+  const orbs=[];
+  for(let i=0;i<4;i++){
+    const m=new THREE.Mesh(new THREE.OctahedronGeometry(.18,0),new THREE.MeshBasicMaterial({color:[0xdc2626,0xf59e0b,0x6b7280,0xef4444][i]}));
+    scene.add(m);orbs.push({mesh:m,r:5+i*.9,speed:.22+i*.12,phase:(i/4)*Math.PI*2});
+  }
+
+  let hmx=0,hmy=0,t=0;
+  document.addEventListener('mousemove',e=>{hmx=(e.clientX/W-.5)*2;hmy=-(e.clientY/H-.5)*2});
+  function animate(){
+    requestAnimationFrame(animate);t+=.006;
+    hex.rotation.y=t*.15;hexInner.rotation.y=-t*.2;
+    r1.rotation.z=t*.06;r2.rotation.z=-t*.04;r3.rotation.y=t*.03;
+    grid.position.z=((t*1.5)%3)-1.5;
+    orbs.forEach(o=>{const a=t*o.speed+o.phase;o.mesh.position.set(Math.cos(a)*o.r,.5*Math.sin(t*.4),Math.sin(a)*o.r*.5);o.mesh.rotation.x+=.03;o.mesh.rotation.y+=.02});
+    camera.position.x+=(hmx*3-camera.position.x)*.03;
+    camera.position.y+=(hmy*1.5+2-camera.position.y)*.03;
+    camera.lookAt(0,0,0);renderer.render(scene,camera);
+  }
+  animate();
+}
+
+// ── SYSTEM ─────────────────────────────────────────────────────
+let ws=null,totalAlerts=0,allAlerts=[],rec=false;
+function startSys(){fetch('/start',{method:'POST'}).then(()=>connectWS());document.getElementById('sdot').className='sys-dot on';document.getElementById('sstat').textContent='ONLINE'}
+function stopSys(){fetch('/stop',{method:'POST'});if(ws){ws.close();ws=null}document.getElementById('sdot').className='sys-dot off';document.getElementById('sstat').textContent='OFFLINE'}
+function toggleRec(){
+  if(!rec){fetch('/recording/start',{method:'POST'});rec=true;const b=document.getElementById('btn-rec');b.classList.add('on');b.textContent='■ STOP REC'}
+  else{fetch('/recording/stop',{method:'POST'});rec=false;const b=document.getElementById('btn-rec');b.classList.remove('on');b.textContent='● REC'}
+}
+function clearAlerts(){fetch('/alerts/clear',{method:'POST'});allAlerts=[];totalAlerts=0;renderAlerts([]);document.getElementById('s-alrt').textContent='0'}
+function connectWS(){
+  if(ws)return;
+  ws=new WebSocket('ws://'+location.host+'/ws');
+  ws.onmessage=e=>{const d=JSON.parse(e.data);updateFrames(d);updateStats(d.stats||{});if(d.alerts&&d.alerts.length)procAlerts(d.alerts)};
+  ws.onclose=()=>{ws=null;document.getElementById('sdot').className='sys-dot off'};
+}
+function updateFrames(d){
+  if(d.frame)document.getElementById('img-raw').src='data:image/jpeg;base64,'+d.frame;
+  if(d.heatmap)document.getElementById('img-hm').src='data:image/jpeg;base64,'+d.heatmap;
+  if(d.flow)document.getElementById('img-flow').src='data:image/jpeg;base64,'+d.flow;
+}
+function updateStats(s){
+  if(!s||!Object.keys(s).length)return;
+  const cnt=s.total_count||0,lim=s.crowd_limit||20,pct=Math.min(cnt/Math.max(lim,1)*100,100);
+  document.getElementById('crowd-ratio').textContent=cnt+' / '+lim;
+  const bf=document.getElementById('bar-fill');
+  bf.style.width=pct+'%';
+  bf.style.background=cnt>lim?'linear-gradient(90deg,#ef4444,#dc2626)':pct>75?'linear-gradient(90deg,var(--amber),#d97706)':'linear-gradient(90deg,var(--red),var(--amber))';
+  document.getElementById('s-cnt').textContent=cnt;
+  document.getElementById('s-cnt').style.color=cnt>lim?'#ef4444':'var(--red)';
+  document.getElementById('s-lim').textContent='LIMIT: '+lim;
+  document.getElementById('sl').value=lim;document.getElementById('slv').textContent=lim;
+  document.getElementById('s-spd').textContent=(s.avg_speed||0).toFixed(0);
+  document.getElementById('s-grps').textContent=s.gatherings||0;
+  const agd=s.aggression_detected,anc=s.anomaly_confirmed;
+  const stEl=document.getElementById('s-stat'),agEl=document.getElementById('s-aggr'),vpEl=document.getElementById('vp-st');
+  if(agd){stEl.textContent='AGGRESSION';stEl.style.color='#ef4444';agEl.textContent=(s.aggression_count||0)+' PERSON(S)';agEl.style.color='#ef4444';document.getElementById('s-aids').textContent='IDs: '+(s.aggression_ids||[]).join(', ');vpEl.textContent='AGGRESSION DETECTED';vpEl.style.color='#ef4444'}
+  else if(anc){stEl.textContent='ANOMALY';stEl.style.color='#f59e0b';agEl.textContent='NONE';agEl.style.color='#10b981';vpEl.textContent='ANOMALY CONFIRMED';vpEl.style.color='#f59e0b'}
+  else if((s.warmup_progress||0)<100){stEl.textContent='WARMUP '+(s.warmup_progress||0)+'%';stEl.style.color='#f59e0b';vpEl.textContent='WARMING UP AI...';vpEl.style.color='#6b7280'}
+  else{stEl.textContent='NORMAL';stEl.style.color='#10b981';agEl.textContent='NONE';agEl.style.color='#10b981';vpEl.textContent='SYSTEM NOMINAL';vpEl.style.color='#10b981'}
+  document.getElementById('s-frms').textContent=(s.consec_anom_frames||0)>0?(s.consec_anom_frames)+' FRAMES':'';
+  setMM('mm-den','mmb-den',s.max_density||0,1,2);setMM('mm-coh','mmb-coh',s.flow_coherence||0,1,3);
+  setMM('mm-warm','mmb-warm',(s.warmup_progress||0)/100,100,0,'%');setMM('mm-energy','mmb-energy',s.energy_ratio||0,1,3);
+  document.getElementById('a-den').textContent=(s.max_density||0).toFixed(2);
+  document.getElementById('a-coh').textContent=(s.flow_coherence||0).toFixed(3);
+  document.getElementById('a-spd').textContent=(s.max_speed||0).toFixed(0);
+  document.getElementById('a-soc').textContent=s.social_violations||0;
+  document.getElementById('a-score').textContent=s.anomaly_score!==undefined?s.anomaly_score.toFixed(4):'—';
+  document.getElementById('a-frms').textContent=s.consec_anom_frames||0;
+  const wp=s.warmup_progress||0;document.getElementById('a-warm-bar').style.width=wp+'%';document.getElementById('a-warm-pct').textContent=wp+'%';
+  if(s.zones){const zg=document.getElementById('zone-grid');zg.innerHTML='';for(const[n,z]of Object.entries(s.zones)){const col=z.status==='RED'?'#ef4444':z.status==='AMBER'?'#f59e0b':'#10b981';zg.innerHTML+=`<div class="zone-card" style="border-color:${col}"><div style="font-family:var(--mono);font-size:7px;color:var(--steel3);margin-bottom:4px">${n}</div><div style="font-family:var(--display);font-size:28px;color:${col}">${z.count}</div><div style="font-family:var(--mono);font-size:7px;color:${col};margin-top:3px">${z.status}</div></div>`}}
+}
+function setMM(vi,bi,raw,mult,dec=2,unit=''){
+  const ve=document.getElementById(vi),be=document.getElementById(bi);
+  if(ve)ve.textContent=(raw*mult).toFixed(dec)+unit;if(be)be.style.width=Math.min(raw*100,100)+'%';
+}
+function procAlerts(na){
+  const ex=new Set(allAlerts.map(a=>a.time+a.message));
+  const fr=na.filter(a=>!ex.has(a.time+a.message));
+  if(!fr.length)return;
+  totalAlerts+=fr.length;allAlerts=[...fr,...allAlerts].slice(0,200);
+  document.getElementById('s-alrt').textContent=totalAlerts;
+  renderAlerts(allAlerts);renderTable(allAlerts);
+}
+function renderAlerts(list){
+  const el=document.getElementById('alert-feed');
+  document.getElementById('alert-ct').textContent=list.length+' EVENTS';
+  if(!list.length){el.innerHTML='<div class="no-alert">NO ALERTS — SYSTEM NOMINAL</div>';return}
+  el.innerHTML=list.slice(0,30).map(a=>`<div class="arow"><div class="adot d${a.level[0]}"></div><span class="atime">${a.time}</span><span class="amsg">${a.message}</span></div>`).join('');
+}
+function renderTable(list){
+  const tb=document.getElementById('atbl-body');
+  if(!list.length){tb.innerHTML='<tr><td colspan="4" style="font-family:var(--mono);font-size:9px;color:var(--steel3);padding:14px 12px">NO ALERTS</td></tr>';return}
+  tb.innerHTML=list.slice(0,50).map(a=>{
+    const tp=a.message.includes('AGGRESS')?'AGGRESSION':a.message.includes('nomaly')?'ANOMALY':a.message.includes('rowd')?'CROWD':'SYSTEM';
+    const bc=a.level==='critical'?'bc':a.level==='high'?'bh':'bm badge';
+    return`<tr><td>${a.time}</td><td><span class="badge ${bc}">${a.level.toUpperCase()}</span></td><td>${a.message}</td><td>${tp}</td></tr>`;
+  }).join('');
+}
+let cf='all';
+function filterAl(f,el){cf=f;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderTable(f==='all'?allAlerts:allAlerts.filter(a=>a.level===f))}
+
+// ── VIDEO UPLOAD ───────────────────────────────────────────────
+const jobs={};
+function onDrag(e,state){e.preventDefault();document.getElementById('upload-zone').classList.toggle('drag',state)}
+function onDrop(e){e.preventDefault();onDrag(e,false);const f=e.dataTransfer.files[0];if(f)uploadFile(f)}
+function onFileSelect(e){const f=e.target.files[0];if(f)uploadFile(f)}
+async function uploadFile(file){
+  const MAX=500*1024*1024;
+  if(file.size>MAX){toast('FILE TOO LARGE — MAX 500MB');return}
+  const fd=new FormData();fd.append('file',file);
+  let res;
+  try{const r=await fetch('/upload/video',{method:'POST',body:fd});res=await r.json()}
+  catch(e){toast('UPLOAD FAILED');return}
+  const jid=res.job_id;
+  jobs[jid]={id:jid,filename:file.name,size:file.size};
+  renderJobCard(jid,{status:'queued',progress:0,filename:file.name});
+  pollJob(jid);
+}
+function pollJob(jid){
+  const iv=setInterval(async()=>{
+    const r=await fetch('/upload/status/'+jid);
+    const d=await r.json();
+    renderJobCard(jid,d);
+    if(d.status==='done'||d.status==='error')clearInterval(iv);
+  },1500);
+}
+function renderJobCard(jid,d){
+  const cont=document.getElementById('jobs-container');
+  let card=document.getElementById('job-'+jid);
+  if(!card){card=document.createElement('div');card.id='job-'+jid;card.className='job-card';cont.insertBefore(card,cont.firstChild)}
+  const sc=d.status==='done'?'js-done':d.status==='error'?'js-error':d.status==='processing'?'js-processing':'js-queued';
+  const riskCls=d.summary?'risk-'+d.summary.risk_level.toLowerCase():'';
+  card.innerHTML=`
+    <div class="job-header">
+      <div class="job-name">${d.filename||jid} <span style="color:var(--steel3);font-size:8px">(${d.size?Math.round(d.size/1024/1024)+'MB':''})</span></div>
+      <span class="job-status ${sc}">${d.status.toUpperCase()}</span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${d.progress||0}%"></div></div>
+    ${d.status==='processing'?`<div style="font-family:var(--mono);font-size:8px;color:var(--steel3);margin-bottom:14px">PROCESSING... ${d.progress||0}%</div>`:''}
+    ${d.status==='error'?`<div style="font-family:var(--mono);font-size:9px;color:var(--red2);margin-bottom:10px">ERROR: ${d.error||'Unknown error'}</div>`:''}
+    ${d.status==='done'&&d.summary?`
+      <div class="risk-badge ${riskCls}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        RISK LEVEL: ${d.summary.risk_level}
+      </div>
+      <div class="summary-grid">
+        <div class="sg-card"><div class="sg-num">${d.summary.max_people}</div><div class="sg-lbl">MAX PEOPLE</div></div>
+        <div class="sg-card"><div class="sg-num">${d.summary.avg_people}</div><div class="sg-lbl">AVG PEOPLE</div></div>
+        <div class="sg-card"><div class="sg-num">${d.summary.anomaly_frames}</div><div class="sg-lbl">ANOMALY FRAMES</div></div>
+        <div class="sg-card"><div class="sg-num">${d.summary.alert_events}</div><div class="sg-lbl">ALERT EVENTS</div></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--steel3);margin-bottom:12px">
+        Duration: ${d.summary.duration_sec}s &nbsp;|&nbsp; Resolution: ${d.summary.resolution} &nbsp;|&nbsp; Analyzed: ${d.summary.total_frames_analyzed} frames &nbsp;|&nbsp; Avg speed: ${d.summary.avg_speed}px/s
+      </div>
+      <div class="dl-row">
+        <a class="dl-btn" href="${d.video_url}" download>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          ANNOTATED VIDEO (.MP4)
+        </a>
+        <a class="dl-btn" href="${d.report_url}" download>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          FULL REPORT (.JSON)
+        </a>
+        <a class="dl-btn" href="${d.csv_url}" download>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          FRAME DATA (.CSV)
+        </a>
+      </div>
+      ${d.alert_events&&d.alert_events.length?`
+        <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--red);margin:14px 0 8px">ALERT EVENTS (${d.alert_events.length})</div>
+        <table class="ev-table">
+          <thead><tr><th>TIME (S)</th><th>TYPE</th><th>SEVERITY</th><th>DETAIL</th></tr></thead>
+          <tbody>${d.alert_events.slice(0,10).map(e=>`<tr><td>${e.time}</td><td>${e.type}</td><td><span class="badge ${e.severity==='CRITICAL'?'bc':'bh'}">${e.severity}</span></td><td>${e.detail}</td></tr>`).join('')}</tbody>
+        </table>`:''}
+    `:''}`;
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────
+async function saveCrowd(){const v=parseInt(document.getElementById('sl').value);const r=await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({crowd_limit:v})});const d=await r.json();toast('CROWD LIMIT SAVED: '+d.crowd_limit)}
+async function saveTg(){await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telegram_enabled:document.getElementById('tg-en').checked,telegram_token:document.getElementById('tg-tok').value,telegram_chat_id:document.getElementById('tg-chat').value})});toast('TELEGRAM SAVED')}
+async function saveEmail(){await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email_enabled:document.getElementById('em-en').checked,email_host:document.getElementById('em-host').value,email_port:document.getElementById('em-port').value,email_from:document.getElementById('em-from').value,email_to:document.getElementById('em-to').value,email_pass:document.getElementById('em-pass').value})});toast('EMAIL SAVED')}
+async function saveSMS(){await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sms_enabled:document.getElementById('sms-en').checked,twilio_sid:document.getElementById('sms-sid').value,twilio_token:document.getElementById('sms-tok').value,twilio_from:document.getElementById('sms-from').value,twilio_to:document.getElementById('sms-to').value})});toast('SMS SAVED')}
+async function saveDet(){await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({aggression_speed_thresh:parseInt(document.getElementById('cfg-spd').value),anomaly_confirm_frames:parseInt(document.getElementById('cfg-frm').value),skip_frames:parseInt(document.getElementById('cfg-skip').value)})});toast('DETECTION PARAMS UPDATED')}
+
+// ── TOAST ──────────────────────────────────────────────────────
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3200)}
+</script>
+</body>
+</html>

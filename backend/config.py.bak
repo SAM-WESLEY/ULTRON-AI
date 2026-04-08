@@ -1,0 +1,102 @@
+"""
+Sentinel AI Ultimate — Central Configuration
+FIXED: Alert cooldowns, anomaly thresholds, crowd limit configurable
+"""
+import os, numpy as np
+
+# ── VIDEO SOURCE ────────────────────────────────────────────────────
+VIDEO_SOURCE   = os.getenv("VIDEO_SOURCE", "0")
+
+# ── YOLO11 ──────────────────────────────────────────────────────────
+YOLO_MODEL     = "yolo11s.pt"
+YOLO_CONF      = 0.35
+YOLO_IOU       = 0.5
+YOLO_IMG_SIZE  = 640
+
+# ── TRACKING ────────────────────────────────────────────────────────
+TRACKER_CONFIG     = "trackers/botsort_crowd.yaml"
+TRAJECTORY_MAX_LEN = 90
+
+# ── MOTION ──────────────────────────────────────────────────────────
+SPEED_WINDOW   = 10
+DIR_MIN_DISP   = 2.0
+DENSITY_ROWS   = 8
+DENSITY_COLS   = 10
+TOP_DOWN_CAM   = True
+
+# ── ANOMALY DETECTION ───────────────────────────────────────────────
+# FIX: contamination 0.05→0.02 so only truly rare events flagged
+# FIX: warmup 80→150 so model learns normal behaviour properly first
+# FIX: confirm_frames = must stay anomaly for N consecutive frames
+ANOMALY_CONTAMINATION   = 0.02
+ANOMALY_WARMUP          = 150
+ANOMALY_RETRAIN_EVERY   = 500
+ANOMALY_CONFIRM_FRAMES  = 8
+
+# ── AGGRESSIVE MOVEMENT (NEW) ────────────────────────────────────────
+AGGRESSION_SPEED_THRESH    = 120   # px/s — fast running
+AGGRESSION_ACCEL_THRESH    = 30    # sudden speed change
+AGGRESSION_DIRVAR_THRESH   = 0.75  # erratic/chaotic direction
+AGGRESSION_MIN_PEOPLE      = 1     # min people showing aggression
+
+# ── CROWD COUNT LIMIT (configurable via UI 1-100) ───────────────────
+CROWD_LIMIT    = int(os.getenv("CROWD_LIMIT", "20"))
+
+# ── GATHERING DETECTION ──────────────────────────────────────────────
+GATHERING_PROXIMITY_PX = 90
+GATHERING_MIN_GROUP    = 3
+
+# ── ENERGY ANOMALY ───────────────────────────────────────────────────
+ENERGY_ANOMALY_RATIO   = 0.66
+ENERGY_SPEED_THRESH    = 40
+ENERGY_DIRVAR_THRESH   = 0.6
+
+# ── SOCIAL DISTANCE ──────────────────────────────────────────────────
+SOCIAL_DIST_MIN_PX     = 60
+
+# ── ZONES ────────────────────────────────────────────────────────────
+ZONES = {
+    "Entry Gate": np.array([[0,0],[200,0],[200,200],[0,200]]),
+    "Exit Zone":  np.array([[440,280],[640,280],[640,480],[440,480]]),
+}
+ZONE_WARN_COUNT     = 15
+ZONE_CRITICAL_COUNT = 30
+
+# ── ALERT THRESHOLDS ─────────────────────────────────────────────────
+COUNT_WARN         = 15
+COUNT_CRITICAL     = 30
+DENSITY_THRESHOLD  = 0.7
+FLOW_COHERENCE_TH  = 0.85
+
+# ── ALERT COOLDOWNS per type (FIX: was 0 = flooded every frame) ──────
+ALERT_COOLDOWNS = {
+    "crowd_count":     15,
+    "crowd_limit":     10,
+    "density":         20,
+    "stampede":        30,
+    "anomaly":         20,
+    "aggression":      10,
+    "energy":          25,
+    "gathering":       30,
+    "social_distance": 60,
+    "zone":            20,
+}
+
+# ── TELEGRAM ──────────────────────────────────────────────────────────
+TELEGRAM_ENABLED   = os.getenv("TELEGRAM_ENABLED","false").lower()=="true"
+TELEGRAM_TOKEN     = os.getenv("TELEGRAM_TOKEN","")
+TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID","")
+TELEGRAM_COOLDOWN  = 30
+
+# ── VISUALIZATION ────────────────────────────────────────────────────
+HEATMAP_DECAY      = 0.93
+HEATMAP_ALPHA      = 0.45
+HEATMAP_RADIUS     = 50
+FLOW_ARROW_SCALE   = 4.0
+
+# ── WEB SERVER ───────────────────────────────────────────────────────
+HOST               = "0.0.0.0"
+PORT               = 8000
+
+# ── PERFORMANCE ──────────────────────────────────────────────────────
+SKIP_FRAMES        = 1

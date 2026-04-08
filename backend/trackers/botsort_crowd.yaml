@@ -1,0 +1,43 @@
+# BoT-SORT Tracker — TUNED v2.0 for dense crowd surveillance
+# Changes from video calibration of 30 crowd videos:
+#   track_high_thresh : 0.35 → 0.45  (only high-confidence detections start new tracks)
+#   new_track_thresh  : 0.40 → 0.55  (higher bar to create a new track ID — reduces ID explosion)
+#   track_buffer      : 45  → 60     (hold identity for 60 frames through occlusion)
+#   match_thresh      : 0.85 → 0.80  (slightly looser re-ID match to recover after occlusion)
+#   proximity_thresh  : 0.50 → 0.45  (tighter IoU required for spatial proximity match)
+#   appearance_thresh : 0.25 → 0.30  (require stronger appearance similarity for re-ID)
+
+tracker_type: botsort
+
+# Detection score gate: only boxes above this enter the high-confidence track pool
+track_high_thresh: 0.45
+
+# Minimum score for a detection to be considered for low-confidence recovery
+track_low_thresh: 0.10
+
+# Minimum score for a new track to be initialised (prevents ghost tracks)
+new_track_thresh: 0.55
+
+# Frames a track is held alive without a matching detection
+# (extended: 45 → 60 to survive occlusion in dense crowds)
+track_buffer: 60
+
+# IoU threshold for associating detections to existing tracks
+match_thresh: 0.80
+
+# Fuse detection score with track score during association
+fuse_score: true
+
+# Sparse optical flow for camera-motion compensation
+# Keeps track centres stable even on hand-held / PTZ cameras
+gmc_method: sparseOptFlow
+
+# Spatial proximity gate (IoU) for confirmed tracks
+proximity_thresh: 0.45
+
+# ReID appearance similarity threshold
+# 0.30 = require stronger appearance match before re-using an old ID
+appearance_thresh: 0.30
+
+# ReID model disabled (not needed for fixed CCTV; saves compute)
+with_reid: false
